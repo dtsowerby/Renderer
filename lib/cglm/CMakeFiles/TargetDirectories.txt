@@ -1,0 +1,5 @@
+C:/Users/Deacon/Desktop/CC++/jdhc/lib/cglm/CMakeFiles/cglm.dir
+C:/Users/Deacon/Desktop/CC++/jdhc/lib/cglm/CMakeFiles/PACKAGE.dir
+C:/Users/Deacon/Desktop/CC++/jdhc/lib/cglm/CMakeFiles/INSTALL.dir
+C:/Users/Deacon/Desktop/CC++/jdhc/lib/cglm/CMakeFiles/ALL_BUILD.dir
+C:/Users/Deacon/Desktop/CC++/jdhc/lib/cglm/CMakeFiles/ZERO_CHECK.dir

@@ -1,0 +1,26 @@
+# CMake generation dependency list for this directory.
+C:/Users/Deacon/Desktop/CC++/jdhc/lib/cglm/CMakeFiles/3.28.3/CMakeCCompiler.cmake
+C:/Users/Deacon/Desktop/CC++/jdhc/lib/cglm/CMakeFiles/3.28.3/CMakeRCCompiler.cmake
+C:/Users/Deacon/Desktop/CC++/jdhc/lib/cglm/CMakeFiles/3.28.3/CMakeSystem.cmake
+C:/Users/Deacon/Desktop/CC++/jdhc/lib/cglm/CMakeLists.txt
+C:/Users/Deacon/Desktop/CC++/jdhc/lib/cglm/cglm.pc.in
+D:/CMAKE/share/cmake-3.28/Modules/CMakeCInformation.cmake
+D:/CMAKE/share/cmake-3.28/Modules/CMakeCommonLanguageInclude.cmake
+D:/CMAKE/share/cmake-3.28/Modules/CMakeGenericSystem.cmake
+D:/CMAKE/share/cmake-3.28/Modules/CMakeInitializeConfigs.cmake
+D:/CMAKE/share/cmake-3.28/Modules/CMakeLanguageInformation.cmake
+D:/CMAKE/share/cmake-3.28/Modules/CMakeRCInformation.cmake
+D:/CMAKE/share/cmake-3.28/Modules/CMakeSystemSpecificInformation.cmake
+D:/CMAKE/share/cmake-3.28/Modules/CMakeSystemSpecificInitialize.cmake
+D:/CMAKE/share/cmake-3.28/Modules/CPack.cmake
+D:/CMAKE/share/cmake-3.28/Modules/CPackComponent.cmake
+D:/CMAKE/share/cmake-3.28/Modules/Compiler/CMakeCommonCompilerMacros.cmake
+D:/CMAKE/share/cmake-3.28/Modules/Compiler/MSVC-C.cmake
+D:/CMAKE/share/cmake-3.28/Modules/Compiler/MSVC.cmake
+D:/CMAKE/share/cmake-3.28/Modules/GNUInstallDirs.cmake
+D:/CMAKE/share/cmake-3.28/Modules/Platform/Windows-Initialize.cmake
+D:/CMAKE/share/cmake-3.28/Modules/Platform/Windows-MSVC-C.cmake
+D:/CMAKE/share/cmake-3.28/Modules/Platform/Windows-MSVC.cmake
+D:/CMAKE/share/cmake-3.28/Modules/Platform/Windows.cmake
+D:/CMAKE/share/cmake-3.28/Modules/Platform/WindowsPaths.cmake
+D:/CMAKE/share/cmake-3.28/Templates/CPackConfig.cmake.in
