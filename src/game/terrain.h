@@ -17,7 +17,7 @@ typedef struct TerrainChunk
 
 void generateChunk(TerrainChunk* terrainChunk, int firstX, int firstZ)
 {   
-    terrainChunk->verticesCount = 3*chunkSize * chunkSize;
+    terrainChunk->verticesCount = 8*chunkSize * chunkSize;
     terrainChunk->indicesCount = 3*2*(chunkSize-1)*(chunkSize-1);
     terrainChunk->indices = malloc(sizeof(terrainChunk->indices)*terrainChunk->indicesCount);
     terrainChunk->vertices = malloc(sizeof(terrainChunk->vertices)*terrainChunk->verticesCount);
@@ -30,9 +30,21 @@ void generateChunk(TerrainChunk* terrainChunk, int firstX, int firstZ)
         for(int x = firstX; x < (firstX+chunkSize); x++)
         {   
             float perlin = (4*(perlin2d((float)(x)/2000, (float)(z)/2000, 4, 12)-0.25));
+
+            //position
             terrainChunk->vertices[vertexIndex++] = ((float)(x)*2);
             terrainChunk->vertices[vertexIndex++] = perlin*perlin*perlin*perlin*10.f;
             terrainChunk->vertices[vertexIndex++] = ((float)(z)*2);
+
+            //colour
+            terrainChunk->vertices[vertexIndex++] = 0.5f;
+            terrainChunk->vertices[vertexIndex++] = 0.5f;
+            terrainChunk->vertices[vertexIndex++] = 1.0f;
+
+            // Texture Coordinates
+            int texSize = 4.0f;
+            terrainChunk->vertices[vertexIndex++] = ((float)(x - firstX) / (chunkSize)) * texSize; // U
+            terrainChunk->vertices[vertexIndex++] = ((float)(z - firstZ) / (chunkSize)) * texSize; // V
 
             int adjustedX = x-firstX;
             int adjustedZ = z-firstZ;

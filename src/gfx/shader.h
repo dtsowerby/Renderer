@@ -15,6 +15,12 @@ inline void setUniformMat4(const char* name, mat4 m, unsigned int shaderProgram)
     glUniformMatrix4fv(location, 1, GL_FALSE, m[0]);
 }
 
+inline void setUniformInt1(const char* name, int i, unsigned int shaderProgram)
+{
+    GLint location = glGetUniformLocation(shaderProgram, name);
+    glUniform1i(location, i);
+}
+
 inline void useShader(unsigned int shaderProgram)
 {
     glUseProgram(shaderProgram);

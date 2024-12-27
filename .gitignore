@@ -55,3 +55,11 @@ dkms.conf
 
 # vscode
 .vscode/
+
+#vs
+.vcxproj
+.vcxproj.filters
+generate.stamp
+generate.stamp.depend
+.cmake
+.sln

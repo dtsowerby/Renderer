@@ -48,6 +48,12 @@ void InitializeWindow(void (*start)(), void (*update)(), void (*input)())
     // I don't really know
     glPatchParameteri(GL_PATCH_VERTICES, 4);
 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
     glClearColor(0.8f, 0.2f, 0.4f, 0.0f);
 
     state.windowHeight = 768;

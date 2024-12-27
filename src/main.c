@@ -10,10 +10,12 @@
 #include "util/noise.h"
 
 #include "state.h"
+
 #include "gfx/window/window.h"
 #include "gfx/camera.h"
 #include "gfx/shader.h"
 #include "gfx/vao.h"
+#include "gfx/texture.h"
 
 #include "game/terrain.h"
 
@@ -28,6 +30,8 @@ float speed = 1000.0f;
 TerrainChunk* chunks;
 unsigned int chunkCount = 16;
 
+Texture grass;
+
 //ui
 float mouseSpeed = 0.1f;
 float xpos;
@@ -37,8 +41,8 @@ bool wireFrame = false;
 
 void start()
 {      
-    vec3 zero = {0, 0, 0};
-    createCamera(&camera, zero);
+    vec3 camPos = {0, 20, 0};
+    createCamera(&camera, camPos);
     setProjection(&camera);
 
     chunks = malloc(sizeof(*chunks)*chunkCount);
@@ -50,11 +54,14 @@ void start()
         }
     }
 
-    unsigned int vertexShader = createVertexShader("res/vertex.vert");
-    unsigned int fragmentShader = createFragmentShader("res/fragment.frag");
+    unsigned int vertexShader = createVertexShader("res/texture.vert");
+    unsigned int fragmentShader = createFragmentShader("res/texture.frag");
     //unsigned int tesselationControlShader = createTesselationControlShader();
     //unsigned int tesselationEvaluationShader = createTesselationControlShader();
     shaderProgram = createShaderProgram(vertexShader, fragmentShader);
+
+    grass = loadTexture("res/grass.jpg");
+    setUniformInt1("ourTexture", 0, shaderProgram);
 }
 
 void update()
@@ -70,6 +77,10 @@ void update()
     mat4 mvp;  
     getMVP(mvp, &camera, model);
     setUniformMat4("MVP", mvp[0], shaderProgram);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, grass.id);
+
     useShader(shaderProgram);
 
     drawTerrain(chunks, chunkCount, camera);
