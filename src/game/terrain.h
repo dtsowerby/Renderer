@@ -36,13 +36,13 @@ void generateChunk(TerrainChunk* terrainChunk, int firstX, int firstZ)
             terrainChunk->vertices[vertexIndex++] = perlin*perlin*perlin*perlin*10.f;
             terrainChunk->vertices[vertexIndex++] = ((float)(z)*2);
 
-            //colour
-            terrainChunk->vertices[vertexIndex++] = 0.5f;
-            terrainChunk->vertices[vertexIndex++] = 0.5f;
+            // normals -> for now
+            terrainChunk->vertices[vertexIndex++] = 0.0f;
             terrainChunk->vertices[vertexIndex++] = 1.0f;
+            terrainChunk->vertices[vertexIndex++] = 0.0f;
 
             // Texture Coordinates
-            int texSize = 4.0f;
+            int texSize = 48.0f;
             terrainChunk->vertices[vertexIndex++] = ((float)(x - firstX) / (chunkSize)) * texSize; // U
             terrainChunk->vertices[vertexIndex++] = ((float)(z - firstZ) / (chunkSize)) * texSize; // V
 
@@ -68,7 +68,7 @@ void generateChunk(TerrainChunk* terrainChunk, int firstX, int firstZ)
     createVAO(&terrainChunk->vao, terrainChunk->vertices, terrainChunk->verticesCount, terrainChunk->indices, terrainChunk->indicesCount);
 }
 
-void drawTerrain(TerrainChunk* chunks, unsigned int chunkCount, Camera camera)
+void drawTerrain(TerrainChunk* chunks, unsigned int chunkCount)
 {
     for(int i = 0; i < chunkCount; i++)
     {

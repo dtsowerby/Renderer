@@ -5,12 +5,12 @@ layout (location = 2) in vec2 aTexCoord;
 
 uniform mat4 MVP;
 
-out vec3 ourColor;
+out vec3 Color;
 out vec2 TexCoord;
 
 void main()
 {
     gl_Position = MVP * vec4(aPos, 1.0);
-    ourColor = aColor;
+    Color = aColor;
     TexCoord = aTexCoord;
 }
