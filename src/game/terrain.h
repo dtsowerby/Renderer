@@ -65,6 +65,39 @@ void generateChunk(TerrainChunk* terrainChunk, int firstX, int firstZ)
             }
         }
     }
+    // Accumulate normals
+    for (int i = 0; i < terrainChunk->indicesCount; i += 3)
+    {
+        GLuint i0 = terrainChunk->indices[i];
+        GLuint i1 = terrainChunk->indices[i + 1];
+        GLuint i2 = terrainChunk->indices[i + 2];
+
+        GLfloat* v0 = &terrainChunk->vertices[i0 * 8];
+        GLfloat* v1 = &terrainChunk->vertices[i1 * 8];
+        GLfloat* v2 = &terrainChunk->vertices[i2 * 8];
+
+        // Position vectors
+        float x0 = v0[0], y0 = v0[1], z0 = v0[2];
+        float x1 = v1[0], y1 = v1[1], z1 = v1[2];
+        float x2 = v2[0], y2 = v2[1], z2 = v2[2];
+
+        // Edges
+        float ux = x1 - x0, uy = y1 - y0, uz = z1 - z0;
+        float vx = x2 - x0, vy = y2 - y0, vz = z2 - z0;
+
+        // Cross product (normal)
+        float nx = uy * vz - uz * vy;
+        float ny = uz * vx - ux * vz;
+        float nz = ux * vy - uy * vx;
+
+        // Add the normal to each vertex's normal
+        for (int j = 0; j < 3; j++) {
+            GLuint idx = terrainChunk->indices[i + j];
+            terrainChunk->vertices[idx * 8 + 3] += nx;
+            terrainChunk->vertices[idx * 8 + 4] += ny;
+            terrainChunk->vertices[idx * 8 + 5] += nz;
+        }
+    }
     createVAO(&terrainChunk->vao, terrainChunk->vertices, terrainChunk->verticesCount, terrainChunk->indices, terrainChunk->indicesCount);
 }
 
