@@ -20,6 +20,10 @@ unsigned int createVertexShader(const char* file)
         glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
         fprintf(stderr, "vertex compilation failed -> %s -> %s\n", infoLog, file);
     }
+    if (vertexShader == 0) {
+        fprintf(stderr, "glCreateShader(GL_VERTEX_SHADER) failed\n");
+        return 0;
+    }
     return vertexShader;
 }
 
@@ -36,6 +40,10 @@ unsigned int createFragmentShader(const char* file)
     {
         glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
         fprintf(stderr, "vertex compilation failed -> %s -> %s\n", infoLog, file);
+    }
+    if (fragmentShader == 0) {
+        fprintf(stderr, "glCreateShader(GL_VERTEX_SHADER) failed\n");
+        return 0;
     }
     return fragmentShader;
 }
@@ -88,6 +96,10 @@ unsigned int createShaderProgram(unsigned int vertexShader, unsigned int fragmen
     if(!success) {
         glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
         fprintf(stderr, "shader linking failed -> %s\n", infoLog);
+    }
+    if (shaderProgram == 0) {
+        fprintf(stderr, "glCreateProgram() failed\n");
+        return 0;
     }
     return shaderProgram;
 }

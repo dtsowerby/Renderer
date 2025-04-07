@@ -59,23 +59,20 @@ void start()
         }
     }
 
-    unsigned int vertexShader = createVertexShader("res/shadowTexture.vert");
-    unsigned int fragmentShader = createFragmentShader("res/shadowTexture.frag");
+    unsigned int vertexShader = createVertexShader("res/vertex.vert");
+    unsigned int fragmentShader = createFragmentShader("res/fragment.frag");
 
-    unsigned int depthVertShader = createVertexShader("res/shadowDepth.vert");
-    unsigned int depthFragShader = createFragmentShader("res/shadowDepth.frag");
-
-    //unsigned int tesselationControlShader = createTesselationControlShader();
-    //unsigned int tesselationEvaluationShader = createTesselationControlShader();
+    //unsigned int depthVertShader = createVertexShader("res/shadowDepth.vert");
+    //unsigned int depthFragShader = createFragmentShader("res/shadowDepth.frag");
 
     textureShaderProgram = createShaderProgram(vertexShader, fragmentShader);
 
     useShader(textureShaderProgram);
-    grass = loadTexture("res/grass.jpg");
-    setUniformInt1("diffuseTexture", 0, textureShaderProgram);
-    setUniformInt1("shadowMap", 1, textureShaderProgram);
+    //grass = loadTexture("res/grass.jpg");
+    //setUniformInt1("diffuseTexture", 0, textureShaderProgram);
+    //setUniformInt1("shadowMap", 1, textureShaderProgram);
 
-    depthShaderProgram = createShaderProgram(depthVertShader, depthFragShader);
+    /*depthShaderProgram = createShaderProgram(depthVertShader, depthFragShader);
     useShader(depthShaderProgram);
     //Shadow Mapping
     glGenFramebuffers(1, &depthMapFBO);
@@ -87,19 +84,19 @@ void start()
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);*/
 }
 
 void update()
 {   
-    mat4 model = {
+    const mat4 model = {
         1, 0, 0, 0,
         0, 1, 0, 0,
         0, 0, 1, 0,
         0, 0, 0, 1
     };
 
-    mat4 lightProjection, lightView;
+    /*mat4 lightProjection, lightView;
     mat4 lightSpaceMatrix;
     vec3 lightPos = {0, 10, 0};
     vec3 up = {0, 1, 0};
@@ -110,35 +107,33 @@ void update()
     glm_mat4_mul(lightProjection, lightView, lightSpaceMatrix);
     // render scene from light's point of view
     useShader(depthShaderProgram);
-    setUniformMat4("lightSpaceMatrix", lightSpaceMatrix[0], depthShaderProgram);
+    setUniformMat4("lightSpaceMatrix", lightSpaceMatrix[0], depthShaderProgram);*/
 
-    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+    /*glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
     glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
         glClear(GL_DEPTH_BUFFER_BIT);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, grass.id);
         drawTerrain(chunks, chunkCount);
         //renderScene(simpleDepthShader);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);*/
 
     // reset viewport
     glViewport(0, 0, state.windowWidth, state.windowHeight);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
     setView(&camera);
-    mat4 mvp;  
+    mat4 mvp;
     getMVP(mvp, &camera, model);
-
     useShader(textureShaderProgram);
     setUniformMat4("mvp", mvp[0], textureShaderProgram);
-    setUniformVec3("viewPos", camera.position, textureShaderProgram);
-    setUniformVec3("lightPos", lightPos, textureShaderProgram);
-    setUniformMat4("lightSpaceMatrix", lightSpaceMatrix[0], textureShaderProgram);
+    //setUniformVec3("viewPos", camera.position, textureShaderProgram);
+    //setUniformVec3("lightPos", lightPos, textureShaderProgram);
+    //setUniformMat4("lightSpaceMatrix", lightSpaceMatrix[0], textureShaderProgram);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, grass.id);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, depthMap);
+    //glActiveTexture(GL_TEXTURE0);
+    //glBindTexture(GL_TEXTURE_2D, grass.id);
+    //glActiveTexture(GL_TEXTURE1);
+    //glBindTexture(GL_TEXTURE_2D, depthMap);
 
     drawTerrain(chunks, chunkCount);
 
