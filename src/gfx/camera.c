@@ -30,6 +30,7 @@ void setView(Camera* camera)
 
     vec3 final;
     glm_vec3_add(camera->forward, camera->position, final);
+    glm_vec3_copy(camera->forward, camera->lookingAt);
     glm_cross(WorldUp, camera->right, camera->forward);
     glm_normalize(camera->forward);
     glm_lookat(camera->position, final, WorldUp, camera->view);
@@ -37,7 +38,7 @@ void setView(Camera* camera)
 
 void setProjection(Camera* camera)
 {
-    glm_perspective(glm_rad(45), 4.0f/3.0, camera->nearZ, camera->farZ, camera->projection);
+    glm_perspective(glm_rad(45), 4.0f/3.0f, camera->nearZ, camera->farZ, camera->projection);
 }
 
 void getMVP(mat4 mvp, Camera* camera, mat4 model)

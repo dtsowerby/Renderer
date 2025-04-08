@@ -29,7 +29,7 @@ void generateChunk(TerrainChunk* terrainChunk, int firstX, int firstZ)
     {
         for(int x = firstX; x < (firstX+chunkSize); x++)
         {   
-            float perlin = (4*(perlin2d((float)(x)/2000, (float)(z)/2000, 4, 12)-0.25));
+            float perlin = (4*(perlin2d((float)(x)/2000, (float)(z)/2000, 4, 12)-0.25f));
 
             //position
             terrainChunk->vertices[vertexIndex++] = ((float)(x)*2);
@@ -42,7 +42,7 @@ void generateChunk(TerrainChunk* terrainChunk, int firstX, int firstZ)
             terrainChunk->vertices[vertexIndex++] = 0.0f;
 
             // Texture Coordinates
-            int texSize = 48.0f;
+            int texSize = 48;
             terrainChunk->vertices[vertexIndex++] = ((float)(x - firstX) / (chunkSize)) * texSize; // U
             terrainChunk->vertices[vertexIndex++] = ((float)(z - firstZ) / (chunkSize)) * texSize; // V
 
@@ -66,7 +66,7 @@ void generateChunk(TerrainChunk* terrainChunk, int firstX, int firstZ)
         }
     }
     // Accumulate normals
-    for (int i = 0; i < terrainChunk->indicesCount; i += 3)
+    for (unsigned int i = 0; i < terrainChunk->indicesCount; i += 3)
     {
         GLuint i0 = terrainChunk->indices[i];
         GLuint i1 = terrainChunk->indices[i + 1];
@@ -103,7 +103,7 @@ void generateChunk(TerrainChunk* terrainChunk, int firstX, int firstZ)
 
 void drawTerrain(TerrainChunk* chunks, unsigned int chunkCount)
 {
-    for(int i = 0; i < chunkCount; i++)
+    for(unsigned int i = 0; i < chunkCount; i++)
     {
         bindVAO(&chunks[i].vao);
         glDrawElements(GL_TRIANGLES, chunks[i].vao.indexCount, GL_UNSIGNED_INT, (void*)0);

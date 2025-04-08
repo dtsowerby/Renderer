@@ -27,6 +27,12 @@ inline void setUniformVec3(const char* name, vec3 v, unsigned int shaderProgram)
     glUniform3fv(location, 1, v);
 }
 
+inline void setUniformFloat(const char* name, float f, unsigned int shaderProgram)
+{
+    GLint location = glGetUniformLocation(shaderProgram, name);
+    glUniform1f(location, f);
+}
+
 inline void useShader(unsigned int shaderProgram)
 {
     glUseProgram(shaderProgram);

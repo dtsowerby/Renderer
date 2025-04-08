@@ -5,6 +5,8 @@
 #include <glad.h>
 #include "state.h"
 
+#include <window/ui.h>
+
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
 
 void InitializeWindow(void (*start)(), void (*update)(), void (*input)())
@@ -29,6 +31,7 @@ void InitializeWindow(void (*start)(), void (*update)(), void (*input)())
     }
 
     glfwSetInputMode(state.window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    state.cursorDisabled = true;
     glfwMakeContextCurrent(state.window);
     glfwSetCursorPosCallback(state.window, mouse_callback);
 
@@ -64,18 +67,21 @@ void InitializeWindow(void (*start)(), void (*update)(), void (*input)())
     start();
 
     float lastFrame = 0.0f;
+    gui_init();
 
     while(!glfwWindowShouldClose(state.window))
     {      
-        float currentFrame = glfwGetTime();
+        float currentFrame = (float)glfwGetTime();
         state.deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;  
         state.time += state.deltaTime;
         glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
         input();
+        gui_update();
 
         update();
+        gui_render();
 
         glfwSwapBuffers(state.window);
         glfwPollEvents();

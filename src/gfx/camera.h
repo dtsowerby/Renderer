@@ -18,9 +18,11 @@ typedef struct Camera
 
     vec3 forward;
     vec3 right;
+
+    vec3 lookingAt;
 } Camera;
 
-const static vec3 WorldUp = {0, 1, 0};
+static vec3 WorldUp = {0, 1, 0};
 
 void createCamera(Camera* camera, vec3 position);
 
@@ -28,6 +30,6 @@ void setView(Camera* camera);
 
 void setProjection(Camera* camera);
 
-void getMVP(mat4* mvp, Camera* camera, mat4* model);
+void getMVP(mat4 mvp, Camera* camera, mat4 model);
 
 

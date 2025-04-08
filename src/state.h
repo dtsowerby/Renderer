@@ -7,6 +7,7 @@ struct State
     GLFWwindow* window;
     int windowWidth;
     int windowHeight;
+    bool cursorDisabled;
     union clearColor
     {
         int i[3];
