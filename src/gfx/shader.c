@@ -103,3 +103,28 @@ unsigned int createShaderProgram(unsigned int vertexShader, unsigned int fragmen
     }
     return shaderProgram;
 }
+
+unsigned int createShaderProgramS(const char* vertexShaderPath, const char* fragmentShaderPath)
+{   
+    unsigned int vertexShader = createVertexShader(vertexShaderPath);
+    unsigned int fragmentShader = createFragmentShader(fragmentShaderPath);
+
+    int  success;
+    char infoLog[512];
+    unsigned int shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if(!success) {
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        fprintf(stderr, "shader linking failed -> %s\n", infoLog);
+    }
+    if (shaderProgram == 0) {
+        fprintf(stderr, "glCreateProgram() failed\n");
+        return 0;
+    }
+    return shaderProgram;
+}

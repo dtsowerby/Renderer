@@ -5,6 +5,7 @@ unsigned int createFragmentShader(const char* file);
 unsigned int createTesselationControlShader(const char* file);
 unsigned int createTesselationEvaluatationShader(const char* file);
 unsigned int createShaderProgram(unsigned int vertexShader, unsigned int fragmentShader);
+unsigned int createShaderProgramS(const char* vertexShaderPath, const char* fragmentShaderPath);
 
 //make more efficient
 #include <cglm/cglm.h>

@@ -17,14 +17,14 @@
 #include "gfx/vao.h"
 #include "gfx/texture.h"
 
-#include "gfx/cube.h"
+#include "gfx/primitives.h"
 
 #include "game/terrain.h"
 
 GLuint vertexBufferID;
 GLuint elementBuffer;
 
-unsigned int shader1;
+unsigned int blinnphong;
 unsigned int depthShaderProgram;
 
 const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
@@ -32,12 +32,12 @@ unsigned int depthMapFBO;
 unsigned int depthMap;
 
 Camera camera;
-float speed = 1000.0f;
+float speed = 1.0f;
 
 TerrainChunk* chunks;
 unsigned int chunkCount = 16;
 
-vec3 lightPos = {0.0f, 50.0f, 0.0f};
+vec3 lightPos = {2.0f, 15.0f, 0.0f};
 vec3 lightColour = {1.0f, 1.0f, 1.0f};
 vec3 objectColour = {1.0f, 0.5f, 0.31f};
 
@@ -50,44 +50,62 @@ float ypos;
 
 bool wireFrame = false;
 
+unsigned int debugShader;
+
+VAO planeVAO;
+VAO cubeVAO;
+
 void start()
 {      
-    vec3 camPos = {0, 20, 0};
+    vec3 camPos = {0, 0, 0};
     createCamera(&camera, camPos);
-    setProjection(&camera);
 
-    chunks = malloc(sizeof(*chunks)*chunkCount);
+    // Terrain creation
+    /*chunks = malloc(sizeof(*chunks)*chunkCount);
     for(int x = 0; x < 4; x++)
     {
         for(int y = 0; y < 4; y++)
         {
             generateChunk(&chunks[x*4+y], (x-2)*500, (y-2)*500);
         }
-    }
+    }*/
 
-    createCube();
+    createCube(&cubeVAO);
+    createPlane(&planeVAO);
 
-    unsigned int vertexShader = createVertexShader("res/shaders/phong.vert");
-    unsigned int fragmentShader = createFragmentShader("res/shaders/phong.frag");
-
-    shader1 = createShaderProgram(vertexShader, fragmentShader);
-
-    useShader(shader1);
+    depthShaderProgram = createShaderProgramS("res/shaders/depth.vert", "res/shaders/depth.frag");
+    blinnphong = createShaderProgramS("res/shaders/phong.vert", "res/shaders/phong.frag");
+    debugShader = createShaderProgramS("res/shaders/debug.vert", "res/shaders/debug.frag");
 
     // Shadow Stuff
-    unsigned int depthMapFBO;
     glGenFramebuffers(1, &depthMapFBO);  
+    const unsigned int SHADOW_WIDTH = 1024, SHADOW_HEIGHT = 1024;
+
+    glGenTextures(1, &depthMap);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    float borderColor[] = { 1.0, 0.0, 1.0, 1.0 };
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);  
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+        printf("Pain\n");
+
+    useShader(blinnphong);
+    setUniformInt1("directionalShadowMap", 0, blinnphong);
+    useShader(debugShader);
+    setUniformInt1("depthMap", 0, debugShader);
 }
 
 void update()
 {   
-    igBegin("Colour Editor", NULL, 0);
-    igColorPicker3("Light Colour", (float*)&lightColour, ImGuiColorEditFlags_DisplayRGB);
-    igColorPicker3("Object Colour", (float*)&objectColour, ImGuiColorEditFlags_DisplayRGB);
-    igSliderFloat3("Light Position", (float*)&lightPos, -100.0f, 100.0f, NULL, 0);
-    igEnd();
-    //igShowDemoWindow(NULL);
-
     mat4 model = {
         1, 0, 0, 0,
         0, 1, 0, 0,
@@ -95,75 +113,133 @@ void update()
         0, 0, 0, 1
     };
 
+    // render depth
+    mat4 lightProjection;
+    mat4 lightView;
+    mat4 lightSpaceMatrix;
+
+    //setUniformVec3("dirLight.direction", (vec3){-0.2f, -1.0f, -0.3f}, blinnphong);
+
+    //glm_ortho(-100.0f, 100.0f, -100.0f, 100.0f, 1.0f, 100000000.0f, lightProjection);
+    glm_ortho(-1.0f, 1.0f, -1.0f, 1.0f, camera.nearZ, camera.farZ, lightProjection);
+    //glm_ortho(-1.0f, 1.0f, -1.0f, 1.0f, camera.nearZ, camera.farZ, camera.projection);
+    glm_lookat(lightPos, (vec3){0.0f, 1.0f, 0.0f}, (vec3){1.0f, 0.0f, 0.0f}, lightView);
+    //glm_lookat(lightPos, (vec3){0.0f, 2.0f, 0.0f}, (vec3){0.0f, 0.0f, 0.0f}, camera.view);
+
+    glm_mat4_copy(camera.view, lightView);
+    glm_mul(lightProjection, lightView, lightSpaceMatrix);
+    glm_mul(lightSpaceMatrix, model, lightSpaceMatrix);
+    useShader(depthShaderProgram);
+    setUniformMat4("lightSpaceMatrix", lightSpaceMatrix, depthShaderProgram); //ignoring model for now, usually do per object
+    setUniformInt1("depthMap", 0, depthShaderProgram);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    //drawTerrain(chunks, chunkCount);
+    drawCube(&cubeVAO);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
     // reset viewport
     glViewport(0, 0, state.windowWidth, state.windowHeight);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_DEPTH_BUFFER_BIT);
     setView(&camera);
     mat4 mvp;
     getMVP(mvp, &camera, model);
-    useShader(shader1);
-    setUniformMat4("mvp", mvp, shader1);
 
-    setUniformVec3("camPos", camera.position, shader1);
-    setUniformVec3("lightPos", lightPos, shader1);
-    setUniformVec3("lightColour", lightColour, shader1);
-    setUniformVec3("objectColour", objectColour, shader1);
+    useShader(blinnphong);
+    setUniformMat4("mvp", mvp, blinnphong);
+    setUniformMat4("lightSpaceMatrix", lightSpaceMatrix, blinnphong); //ignoring model for now, usually do per object
+    setUniformInt1("directionalShadowMap", 0, blinnphong);
 
-    setUniformVec3("material.ambient", (vec3){1.0f, 0.5f, 0.31f}, shader1);
-    setUniformVec3("material.diffuse", (vec3){1.0f, 0.5f, 0.31f}, shader1);
-    setUniformVec3("material.specular", (vec3){0.5f, 0.5f, 0.5f}, shader1);
-    setUniformFloat("material.shininess", 32.0f, shader1);
+    setUniformVec3("camPos", camera.position, blinnphong);
+    setUniformVec3("lightPos", lightPos, blinnphong);
+    setUniformVec3("lightColour", lightColour, blinnphong);
+    setUniformVec3("objectColour", objectColour, blinnphong);
+
+    setUniformVec3("material.ambient", (vec3){1.0f, 0.5f, 0.31f}, blinnphong);
+    setUniformVec3("material.diffuse", (vec3){1.0f, 0.5f, 0.31f}, blinnphong);
+    setUniformVec3("material.specular", (vec3){0.5f, 0.5f, 0.5f}, blinnphong);
+    setUniformFloat("material.shininess", 32.0f, blinnphong);
 
     // Directional light
-    setUniformVec3("dirLight.direction", (vec3){-0.2f, -1.0f, -0.3f}, shader1);
-    setUniformVec3("dirLight.ambient", (vec3){0.05f, 0.05f, 0.05f}, shader1);
-    setUniformVec3("dirLight.diffuse", (vec3){0.4f, 0.4f, 0.8f}, shader1);
-    setUniformVec3("dirLight.specular", (vec3){0.5f, 0.5f, 0.5f}, shader1);
+    setUniformVec3("dirLight.direction", (vec3){-0.2f, -1.0f, -0.2f}, blinnphong);
+    setUniformVec3("dirLight.ambient", (vec3){0.05f, 0.05f, 0.05f}, blinnphong);
+    setUniformVec3("dirLight.diffuse", (vec3){0.4f, 0.4f, 0.8f}, blinnphong);
+    setUniformVec3("dirLight.specular", (vec3){0.5f, 0.5f, 0.5f}, blinnphong);
 
     // Point light 1
-    setUniformVec3("pointLights[0].position", (vec3){0.0f, 50.0f, 0.0f}, shader1);
-    setUniformVec3("pointLights[0].ambient", (vec3){0.05f, 0.05f, 0.05f}, shader1);
-    setUniformVec3("pointLights[0].diffuse", (vec3){0.8f, 0.8f, 0.8f}, shader1);
-    setUniformVec3("pointLights[0].specular", (vec3){1.0f, 1.0f, 1.0f}, shader1);
-    setUniformFloat("pointLights[0].constant", 1.0f, shader1);
-    setUniformFloat("pointLights[0].linear", 0.09f, shader1);
-    setUniformFloat("pointLights[0].quadratic", 0.032f, shader1);
+    setUniformVec3("pointLights[0].position", (vec3){0.0f, 50.0f, 0.0f}, blinnphong);
+    setUniformVec3("pointLights[0].ambient", (vec3){0.05f, 0.05f, 0.05f}, blinnphong);
+    setUniformVec3("pointLights[0].diffuse", (vec3){0.8f, 0.8f, 0.8f}, blinnphong);
+    setUniformVec3("pointLights[0].specular", (vec3){1.0f, 1.0f, 1.0f}, blinnphong);
+    setUniformFloat("pointLights[0].constant", 1.0f, blinnphong);
+    setUniformFloat("pointLights[0].linear", 0.09f, blinnphong);
+    setUniformFloat("pointLights[0].quadratic", 0.032f, blinnphong);
 
     // Point light 2
-    setUniformVec3("pointLights[1].position", (vec3){100.0f, 100.0f, 100.0f}, shader1);
-    setUniformVec3("pointLights[1].ambient", (vec3){0.05f, 0.05f, 0.05f}, shader1);
-    setUniformVec3("pointLights[1].diffuse", (vec3){0.8f, 0.8f, 0.8f}, shader1);
-    setUniformVec3("pointLights[1].specular", (vec3){1.0f, 1.0f, 1.0f}, shader1);
-    setUniformFloat("pointLights[1].constant", 1.0f, shader1);
-    setUniformFloat("pointLights[1].linear", 0.09f, shader1);
-    setUniformFloat("pointLights[1].quadratic", 0.032f, shader1);
+    setUniformVec3("pointLights[1].position", (vec3){100.0f, 100.0f, 100.0f}, blinnphong);
+    setUniformVec3("pointLights[1].ambient", (vec3){0.05f, 0.05f, 0.05f}, blinnphong);
+    setUniformVec3("pointLights[1].diffuse", (vec3){0.8f, 0.8f, 0.8f}, blinnphong);
+    setUniformVec3("pointLights[1].specular", (vec3){1.0f, 1.0f, 1.0f}, blinnphong);
+    setUniformFloat("pointLights[1].constant", 1.0f, blinnphong);
+    setUniformFloat("pointLights[1].linear", 0.09f, blinnphong);
+    setUniformFloat("pointLights[1].quadratic", 0.032f, blinnphong);
 
     // Spotlight
-    setUniformVec3("spotLight.position", camera.position, shader1);
-    setUniformVec3("spotLight.direction", camera.lookingAt, shader1);
-    setUniformVec3("spotLight.ambient", (vec3){0.0f, 0.0f, 0.0f}, shader1);
-    setUniformVec3("spotLight.diffuse", (vec3){1.0f, 0.0f, 1.0f}, shader1);
-    setUniformVec3("spotLight.specular", (vec3){1.0f, 1.0f, 1.0f}, shader1);
-    setUniformFloat("spotLight.constant", 1.0f, shader1);
-    setUniformFloat("spotLight.linear", 0.09f, shader1);
-    setUniformFloat("spotLight.quadratic", 0.032f, shader1);
-    setUniformFloat("spotLight.cutOff", cosf(glm_rad(12.5f)), shader1);
-    setUniformFloat("spotLight.outerCutOff", cosf(glm_rad(15.0f)), shader1);
-
-    drawTerrain(chunks, chunkCount);
+    setUniformVec3("spotLight.position", camera.position, blinnphong);
+    setUniformVec3("spotLight.direction", camera.lookingAt, blinnphong);
+    setUniformVec3("spotLight.ambient", (vec3){0.0f, 0.0f, 0.0f}, blinnphong);
+    setUniformVec3("spotLight.diffuse", (vec3){1.0f, 0.0f, 1.0f}, blinnphong);
+    setUniformVec3("spotLight.specular", (vec3){1.0f, 1.0f, 1.0f}, blinnphong);
+    setUniformFloat("spotLight.constant", 1.0f, blinnphong);
+    setUniformFloat("spotLight.linear", 0.09f, blinnphong);
+    setUniformFloat("spotLight.quadratic", 0.032f, blinnphong);
+    setUniformFloat("spotLight.cutOff", cosf(glm_rad(12.5f)), blinnphong);
+    setUniformFloat("spotLight.outerCutOff", cosf(glm_rad(15.0f)), blinnphong);
 
     glm_mat4_identity(model);
-    glm_translate(model, (vec3){0.0f, 25.0f, 0.0f});
-    glm_scale(model, (vec3){50.0f, 50.0f, 50.0f});
+    glm_translate(model, (vec3){0.0f, 0.0f, 0.0f});
+    glm_scale(model, (vec3){0.001f, 0.001f, 0.001f});
     getMVP(mvp, &camera, model);
-    setUniformMat4("mvp", mvp, shader1);
-    setUniformVec3("objectColour", (vec3){0.0f, 0.0f, 0.0f}, shader1);
-    drawCube();
+    setUniformMat4("mvp", mvp, blinnphong);
+    //drawTerrain(chunks, chunkCount);
+
+    glm_mat4_identity(model);
+    glm_translate(model, (vec3){0.0f, 0.0f, 0.0f});
+    glm_scale(model, (vec3){0.25f, 0.25f, 0.25f});
+    getMVP(mvp, &camera, model);
+    setUniformMat4("mvp", mvp, blinnphong);
+    setUniformVec3("objectColour", (vec3){0.0f, 0.0f, 0.0f}, blinnphong);
+    drawCube(&cubeVAO);
+
+    // Debug Plane
+    //glDisable(GL_CULL_FACE);
+    useShader(debugShader);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    glm_mat4_identity(model);
+    glm_translate(model, (vec3){0.0f, -1.0f, 0.0f});
+    getMVP(mvp, &camera, model);
+    setUniformInt1("depthMap", 0, debugShader);
+    setUniformMat4("mvp", mvp, debugShader);
+    drawPlane(&planeVAO);
 
     int kjnwe = glGetError();
-    if(kjnwe != 0)
-        printf("x: %i\n", kjnwe);
+    //if(kjnwe != 0)
+        //printf("x: %i\n", kjnwe);
     //printf("ms: %f\n", state.deltaTime*1000);
+}
+
+void ui_update()
+{
+    igBegin("Colour Editor", NULL, 0);
+    igColorPicker3("Light Colour", (float*)&lightColour, ImGuiColorEditFlags_DisplayRGB);
+    igColorPicker3("Object Colour", (float*)&objectColour, ImGuiColorEditFlags_DisplayRGB);
+    igSliderFloat3("Light Position", (float*)&lightPos, -100.0f, 100.0f, NULL, 0);
+    igEnd();
+    //igShowDemoWindow(NULL);
 }
 
 void input()
@@ -264,6 +340,6 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 
 int main(void)
 {   
-    InitializeWindow(start, update, input);
+    InitializeWindow(start, update, input, ui_update);
     return 0;
 }

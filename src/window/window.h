@@ -9,7 +9,7 @@
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn);
 
-void InitializeWindow(void (*start)(), void (*update)(), void (*input)())
+void InitializeWindow(void (*start)(), void (*update)(), void (*input)(), void (*ui_update)())
 {
     //Init GLFW
     if( !glfwInit() )
@@ -80,6 +80,7 @@ void InitializeWindow(void (*start)(), void (*update)(), void (*input)())
         input();
         gui_update();
 
+        ui_update();
         update();
         gui_render();
 
