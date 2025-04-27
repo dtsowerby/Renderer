@@ -45,7 +45,7 @@ void createCamera(Camera* camera, vec3 position)
     camera->pitch = 0;
 
     camera->nearZ = 0.1f;
-    camera->farZ = FLT_MAX;
+    camera->farZ = 25.0f;
 
     setProjection(camera);
 }

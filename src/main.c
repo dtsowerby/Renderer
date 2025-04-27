@@ -37,10 +37,6 @@ float speed = 1.0f;
 TerrainChunk* chunks;
 unsigned int chunkCount = 16;
 
-vec3 lightPos = {2.0f, 15.0f, 0.0f};
-vec3 lightColour = {1.0f, 1.0f, 1.0f};
-vec3 objectColour = {1.0f, 0.5f, 0.31f};
-
 Texture grass;
 
 //ui
@@ -55,23 +51,41 @@ unsigned int debugShader;
 VAO planeVAO;
 VAO cubeVAO;
 
+mat4 cubemodel;
+mat4 planemodel;
+mat4 debugmodel;
+mat4 terrainmodel;
+
 void start()
 {      
-    vec3 camPos = {0, 0, 0};
+    vec3 camPos = {0, 2, 0};
     createCamera(&camera, camPos);
 
     // Terrain creation
-    /*chunks = malloc(sizeof(*chunks)*chunkCount);
+    chunks = malloc(sizeof(*chunks)*chunkCount);
     for(int x = 0; x < 4; x++)
     {
         for(int y = 0; y < 4; y++)
         {
             generateChunk(&chunks[x*4+y], (x-2)*500, (y-2)*500);
         }
-    }*/
+    }
 
     createCube(&cubeVAO);
+    glm_mat4_identity(cubemodel);
+    glm_translate(cubemodel, (vec3){0.0f, 0.0f, 0.0f});
+    glm_mat4_scale(cubemodel, 0.5);
+
     createPlane(&planeVAO);
+    glm_mat4_identity(planemodel);
+    glm_translate(planemodel, (vec3){0.0f, -1.0f, 0.0f});
+
+    glm_mat4_identity(debugmodel);
+    glm_translate(debugmodel, (vec3){2.0f, -2.0f, 0.0f});
+
+    glm_mat4_identity(terrainmodel);
+    glm_mat4_scale(terrainmodel, 0.01f);
+    glm_translate(terrainmodel, (vec3){0.0f, -5.0f, 0.0f});
 
     depthShaderProgram = createShaderProgramS("res/shaders/depth.vert", "res/shaders/depth.frag");
     blinnphong = createShaderProgramS("res/shaders/phong.vert", "res/shaders/phong.frag");
@@ -86,17 +100,15 @@ void start()
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    float borderColor[] = { 1.0, 0.0, 1.0, 1.0 };
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
     glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
     glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);  
-    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        printf("Pain\n");
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     useShader(blinnphong);
     setUniformInt1("directionalShadowMap", 0, blinnphong);
@@ -104,31 +116,27 @@ void start()
     setUniformInt1("depthMap", 0, debugShader);
 }
 
+// Change mvp to vp + m
 void update()
 {   
-    mat4 model = {
-        1, 0, 0, 0,
-        0, 1, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1
-    };
-
     // render depth
     mat4 lightProjection;
     mat4 lightView;
     mat4 lightSpaceMatrix;
 
     //setUniformVec3("dirLight.direction", (vec3){-0.2f, -1.0f, -0.3f}, blinnphong);
+    vec3 lightPos = {-5.0f, 12.0f, 0.0f};
 
     //glm_ortho(-100.0f, 100.0f, -100.0f, 100.0f, 1.0f, 100000000.0f, lightProjection);
-    glm_ortho(-1.0f, 1.0f, -1.0f, 1.0f, camera.nearZ, camera.farZ, lightProjection);
-    //glm_ortho(-1.0f, 1.0f, -1.0f, 1.0f, camera.nearZ, camera.farZ, camera.projection);
-    glm_lookat(lightPos, (vec3){0.0f, 1.0f, 0.0f}, (vec3){1.0f, 0.0f, 0.0f}, lightView);
-    //glm_lookat(lightPos, (vec3){0.0f, 2.0f, 0.0f}, (vec3){0.0f, 0.0f, 0.0f}, camera.view);
+    glm_ortho(-10.0f, 10.0f, -10.0f, 10.0f, camera.nearZ, camera.farZ, lightProjection);
+    //glm_ortho(-10.0f, 10.0f, -10.0f, 10.0f, camera.nearZ, camera.farZ, camera.projection);
+    vec3 camDir;
+    glm_vec3_add(lightPos, (vec3){1.0f, -1.0f, 0.0f}, camDir);
+    glm_lookat(lightPos, camDir, WorldUp, lightView);
+    //glm_lookat(lightPos, camDir,  WorldUp, camera.view);
 
-    glm_mat4_copy(camera.view, lightView);
+    //glm_mat4_copy(camera.view, lightView);
     glm_mul(lightProjection, lightView, lightSpaceMatrix);
-    glm_mul(lightSpaceMatrix, model, lightSpaceMatrix);
     useShader(depthShaderProgram);
     setUniformMat4("lightSpaceMatrix", lightSpaceMatrix, depthShaderProgram); //ignoring model for now, usually do per object
     setUniformInt1("depthMap", 0, depthShaderProgram);
@@ -137,19 +145,34 @@ void update()
     glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
     glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
     glClear(GL_DEPTH_BUFFER_BIT);
-    //drawTerrain(chunks, chunkCount);
-    drawCube(&cubeVAO);
+        
+        setUniformMat4("model", terrainmodel, depthShaderProgram);
+        drawTerrain(chunks, chunkCount);
+    
+        //DrawCube
+        setUniformMat4("model", cubemodel, depthShaderProgram);
+        drawCube(&cubeVAO);
+        //EndDrawCube
+
+        // DrawDebugPlane
+        setUniformMat4("model", planemodel, depthShaderProgram);
+        drawPlane(&planeVAO);
+        // EndDebugPlane
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // reset viewport
     glViewport(0, 0, state.windowWidth, state.windowHeight);
     glClear(GL_DEPTH_BUFFER_BIT);
     setView(&camera);
-    mat4 mvp;
-    getMVP(mvp, &camera, model);
+    //glm_mat4_print(camera.view, stdout);
+    //getMVP(mvp, &camera, model);
 
     useShader(blinnphong);
-    setUniformMat4("mvp", mvp, blinnphong);
+    vec3 lightColour = {1.0f, 1.0f, 1.0f};
+    vec3 objectColour = {1.0f, 0.5f, 0.31f};
+    setUniformMat4("projection", camera.projection, blinnphong);
+    setUniformMat4("view", camera.view, blinnphong);
     setUniformMat4("lightSpaceMatrix", lightSpaceMatrix, blinnphong); //ignoring model for now, usually do per object
     setUniformInt1("directionalShadowMap", 0, blinnphong);
 
@@ -199,46 +222,44 @@ void update()
     setUniformFloat("spotLight.cutOff", cosf(glm_rad(12.5f)), blinnphong);
     setUniformFloat("spotLight.outerCutOff", cosf(glm_rad(15.0f)), blinnphong);
 
-    glm_mat4_identity(model);
-    glm_translate(model, (vec3){0.0f, 0.0f, 0.0f});
-    glm_scale(model, (vec3){0.001f, 0.001f, 0.001f});
-    getMVP(mvp, &camera, model);
-    setUniformMat4("mvp", mvp, blinnphong);
-    //drawTerrain(chunks, chunkCount);
+    setUniformMat4("model", terrainmodel, blinnphong);
+    setUniformVec3("objectColour", (vec3){0.0f, 0.0f, 0.0f}, blinnphong);
+    drawTerrain(chunks, chunkCount);
 
-    glm_mat4_identity(model);
-    glm_translate(model, (vec3){0.0f, 0.0f, 0.0f});
-    glm_scale(model, (vec3){0.25f, 0.25f, 0.25f});
-    getMVP(mvp, &camera, model);
-    setUniformMat4("mvp", mvp, blinnphong);
+    //DrawCube
+    setUniformMat4("model", cubemodel, blinnphong);
     setUniformVec3("objectColour", (vec3){0.0f, 0.0f, 0.0f}, blinnphong);
     drawCube(&cubeVAO);
+    //EndDrawCube
 
-    // Debug Plane
-    //glDisable(GL_CULL_FACE);
+    // DrawPlane
+    setUniformMat4("model", planemodel, blinnphong);
+    setUniformVec3("objectColour", (vec3){0.0f, 0.0f, 0.0f}, blinnphong);
+    drawPlane(&planeVAO);
+    // EndPlane
+
     useShader(debugShader);
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, depthMap);
-    glm_mat4_identity(model);
-    glm_translate(model, (vec3){0.0f, -1.0f, 0.0f});
-    getMVP(mvp, &camera, model);
     setUniformInt1("depthMap", 0, debugShader);
-    setUniformMat4("mvp", mvp, debugShader);
+    setUniformMat4("model", debugmodel, debugShader);
+    setUniformMat4("view", camera.view, debugShader);
+    setUniformMat4("projection", camera.projection, debugShader);
     drawPlane(&planeVAO);
 
     int kjnwe = glGetError();
-    //if(kjnwe != 0)
-        //printf("x: %i\n", kjnwe);
+    if(kjnwe != 0)
+        printf("x: %i\n", kjnwe);
     //printf("ms: %f\n", state.deltaTime*1000);
 }
 
 void ui_update()
 {
-    igBegin("Colour Editor", NULL, 0);
-    igColorPicker3("Light Colour", (float*)&lightColour, ImGuiColorEditFlags_DisplayRGB);
-    igColorPicker3("Object Colour", (float*)&objectColour, ImGuiColorEditFlags_DisplayRGB);
-    igSliderFloat3("Light Position", (float*)&lightPos, -100.0f, 100.0f, NULL, 0);
-    igEnd();
+    //igBegin("Colour Editor", NULL, 0);
+    //igColorPicker3("Light Colour", (float*)&lightColour, ImGuiColorEditFlags_DisplayRGB);
+    //igColorPicker3("Object Colour", (float*)&objectColour, ImGuiColorEditFlags_DisplayRGB);
+    //igSliderFloat3("Light Position", (float*)&lightPos, -100.0f, 100.0f, NULL, 0);
+    //igEnd();
     //igShowDemoWindow(NULL);
 }
 

@@ -109,7 +109,7 @@ vec3 CalcDirLight(DirLight light, vec3 normal, vec3 viewDir)
     vec3 ambient = light.ambient * material.ambient;
 
     float shadow = ShadowCalculation(fragPosLightSpace); 
-    return (diffuse + specular) * (1.0 - shadow);
+    return ambient + (diffuse + specular) * (1.0 - shadow);
 }
 
 vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
@@ -124,7 +124,7 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     float distance = length(light.position - fragPos);
     float attenuation = 1.0 / (light.constant + light.linear * distance + light.quadratic * (distance * distance));
 
-    return ((ambient + diffuse +specular) * attenuation * 100.0f);
+    return ((ambient + diffuse +specular) * attenuation);
 }
 
 vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
@@ -143,7 +143,7 @@ vec3 CalcSpotLight(SpotLight light, vec3 normal, vec3 fragPos, vec3 viewDir)
     float epsilon = light.cutOff - light.outerCutOff;
     float intensity = clamp((theta - light.outerCutOff) / epsilon, 0.0, 1.0);
 
-    return ((ambient + diffuse + specular) * attenuation * intensity * 100.0f);
+    return ((ambient + diffuse + specular) * attenuation * intensity);
 }
 
 void main()
@@ -155,10 +155,10 @@ void main()
 
     for(int i = 0; i < NUM_POINT_LIGHTS; i++)
     {
-        //result += CalcPointLight(pointLights[i], norm, pos, viewDir);
+        result += CalcPointLight(pointLights[i], norm, pos, viewDir);
     }
 
-    //result += CalcSpotLight(spotLight, norm, pos, viewDir);
+    result += CalcSpotLight(spotLight, norm, pos, viewDir);
     
     FragColor = vec4(result, 1.0);
 }

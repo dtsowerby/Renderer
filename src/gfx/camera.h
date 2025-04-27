@@ -23,6 +23,7 @@ typedef struct Camera
 } Camera;
 
 static vec3 WorldUp = {0, 1, 0};
+static vec3 WorldDown = {0, -1, 0};
 
 void createCamera(Camera* camera, vec3 position);
 
