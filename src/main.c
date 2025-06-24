@@ -125,10 +125,10 @@ void update()
     mat4 lightSpaceMatrix;
 
     //setUniformVec3("dirLight.direction", (vec3){-0.2f, -1.0f, -0.3f}, blinnphong);
-    vec3 lightPos = {-5.0f, 12.0f, 0.0f};
+    vec3 lightPos = {15.0f * (sin(state.time)-0.5f), 12.0f, 0.0f};
 
     //glm_ortho(-100.0f, 100.0f, -100.0f, 100.0f, 1.0f, 100000000.0f, lightProjection);
-    glm_ortho(-10.0f, 10.0f, -10.0f, 10.0f, camera.nearZ, camera.farZ, lightProjection);
+    glm_ortho(-20.0f, 20.0f, -20.0f, 20.0f, camera.nearZ, camera.farZ, lightProjection);
     //glm_ortho(-10.0f, 10.0f, -10.0f, 10.0f, camera.nearZ, camera.farZ, camera.projection);
     vec3 camDir;
     glm_vec3_add(lightPos, (vec3){1.0f, -1.0f, 0.0f}, camDir);
@@ -214,7 +214,7 @@ void update()
     setUniformVec3("spotLight.position", camera.position, blinnphong);
     setUniformVec3("spotLight.direction", camera.lookingAt, blinnphong);
     setUniformVec3("spotLight.ambient", (vec3){0.0f, 0.0f, 0.0f}, blinnphong);
-    setUniformVec3("spotLight.diffuse", (vec3){1.0f, 0.0f, 1.0f}, blinnphong);
+    setUniformVec3("spotLight.diffuse", (vec3){1.0f, 1.0f, 1.0f}, blinnphong);
     setUniformVec3("spotLight.specular", (vec3){1.0f, 1.0f, 1.0f}, blinnphong);
     setUniformFloat("spotLight.constant", 1.0f, blinnphong);
     setUniformFloat("spotLight.linear", 0.09f, blinnphong);
